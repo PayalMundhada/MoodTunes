@@ -4,11 +4,12 @@ import numpy as np
 from PIL import Image
 import cv2
 from googleapiclient.discovery import build
-from keys import YOUTUBE_API_KEY
 import random
 import gdown
 import os
+import keys
 
+YOUTUBE_API_KEY = keys.YOUTUBE_API_KEY
 youtube = build("youtube", "v3", developerKey= YOUTUBE_API_KEY)
 
 def preprocess_image(input_image, target_size=(48, 48)):
