@@ -6,3 +6,5 @@ cv2
 googleapiclient.discovery
 keys
 random
+gdown
+os
