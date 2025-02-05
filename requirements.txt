@@ -1,7 +1,7 @@
 streamlit
 tensorflow
 numpy
-Pillow   # Use 'Pillow' for the PIL library
+Pillow  # For PIL
 opencv-python-headless  # For OpenCV without GUI dependencies
 google-api-python-client  # For Google API client
 gdown
