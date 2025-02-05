@@ -1,0 +1,8 @@
+streamlit
+tensorflow 
+numpy
+PIL
+cv2
+googleapiclient.discovery
+keys
+random
