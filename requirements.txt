@@ -1,10 +1,7 @@
 streamlit
-tensorflow 
+tensorflow
 numpy
-PIL
-cv2
-googleapiclient.discovery
-keys
-random
+Pillow   # Use 'Pillow' for the PIL library
+opencv-python-headless  # For OpenCV without GUI dependencies
+google-api-python-client  # For Google API client
 gdown
-os
