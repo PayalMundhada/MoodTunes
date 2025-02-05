@@ -6,7 +6,8 @@ import cv2
 from googleapiclient.discovery import build
 from keys import YOUTUBE_API_KEY
 import random
-
+import gdown
+import os
 
 youtube = build("youtube", "v3", developerKey= YOUTUBE_API_KEY)
 
@@ -81,7 +82,19 @@ def get_youtube_playlists(emotion, language):
 
 
 # Load your trained CNN model
-MODEL_PATH = "./models/cnn_model_merged_labels.h5"  # Update with your model's filename
+# Google Drive File ID
+file_id = "13E0cUC1uPojujg1RreJ8FqowNrxGNSOT"
+# Define model path
+MODEL_PATH = "mood_model.h5"
+
+# Download model if it doesn't exist
+if not os.path.exists(MODEL_PATH):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    gdown.download(url, MODEL_PATH, quiet=False)
+
+
+
+# MODEL_PATH = "./models/cnn_model_merged_labels.h5"  # Update with your model's filename
 model = tf.keras.models.load_model(MODEL_PATH)
 # Load Haar cascade for face detection
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
