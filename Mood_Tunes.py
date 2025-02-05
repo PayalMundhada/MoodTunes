@@ -8,6 +8,7 @@ import random
 import gdown
 import os
 import keys
+import time
 
 YOUTUBE_API_KEY = keys.YOUTUBE_API_KEY
 youtube = build("youtube", "v3", developerKey= YOUTUBE_API_KEY)
@@ -103,37 +104,82 @@ face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_fronta
 # Define mood labels (must match your CNN model's output labels)
 mood_labels = ["Negative", "Neutral", "Positive"]
 
-
 # Define mood images 
 image_paths = [
     "./Dataset/happyimage.jpeg", "./Dataset/n2.jpeg", "./Dataset/sad.jpeg",
-    "./Dataset/nt1.jpeg", "./Dataset/nt2.jpeg", "./Dataset/nt3.jpeg",
-    "./Dataset/surprised2.jpeg", "./Dataset/p2.jpeg", "./Dataset/n4.jpeg",
-    "./Dataset/angry.jpeg", "./Dataset/angry2.jpeg", "./Dataset/disgust1.jpeg",
-    "./Dataset/disgust2.jpeg", "./Dataset/disgust3.jpeg", "./Dataset/fear1.jpeg",
-    "./Dataset/neutral1.jpeg","./Dataset/neutral2.jpeg", "./Dataset/neutral3.jpeg",
-    "./Dataset/nt4.jpeg","./Dataset/p4.jpeg", "./Dataset/sad2.jpeg",
-    "./Dataset/surprised.jpeg","./Dataset/surprised1.jpeg", "./Dataset/p1.jpeg"
-    
+    "./Dataset/nt3.jpeg", "./Dataset/surprised2.jpeg",
+    "./Dataset/angry.jpeg", "./Dataset/disgust1.jpeg",
+    "./Dataset/fear1.jpeg","./Dataset/nt4.jpeg","./Dataset/sad2.jpeg",
+    "./Dataset/surprised.jpeg", "./Dataset/p1.jpeg"
 ]
+# # Define mood images 
+# image_paths = [
+#     "./Dataset/happyimage.jpeg", "./Dataset/n2.jpeg", "./Dataset/sad.jpeg",
+#     "./Dataset/nt1.jpeg", "./Dataset/nt2.jpeg", "./Dataset/nt3.jpeg",
+#     "./Dataset/surprised2.jpeg", "./Dataset/p2.jpeg", "./Dataset/n4.jpeg",
+#     "./Dataset/angry.jpeg", "./Dataset/angry2.jpeg", "./Dataset/disgust1.jpeg",
+#     "./Dataset/disgust2.jpeg", "./Dataset/disgust3.jpeg", "./Dataset/fear1.jpeg",
+#     "./Dataset/neutral1.jpeg","./Dataset/neutral2.jpeg", "./Dataset/neutral3.jpeg",
+#     "./Dataset/nt4.jpeg","./Dataset/p4.jpeg", "./Dataset/sad2.jpeg",
+#     "./Dataset/surprised.jpeg","./Dataset/surprised1.jpeg", "./Dataset/p1.jpeg"
+    
+# ]
 # Fixed size for images
 IMG_SIZE = (200, 200)  # Adjust as needed
 
 # Initialize session state for selected image
 if "selected_image" not in st.session_state:
     st.session_state["selected_image"] = None
+if "processing" not in st.session_state:
+    st.session_state["processing"] = False
 
-# Function to handle selection (ensuring only one selection)
+# Function to allow only one selection
 def select_image(img_path):
-    st.session_state["selected_image"] = img_path  # Store selected image
-    # Reset all checkboxes
-    for img in image_paths:
-        st.session_state[f"checkbox_{img}"] = (img == img_path)
+    if not st.session_state["processing"]:  # Prevent selection while processing
+        st.session_state["selected_image"] = img_path
+        for img in image_paths:
+            st.session_state[f"checkbox_{img}"] = (img == img_path)
+         # Processing starts
+        st.session_state["processing"] = True
+        add_processing_overlay()
+        with st.spinner("Selecting image"):
+            time.sleep(3)  # Simulating processing time
+            # Processing ends
+        st.session_state["processing"] = False
+        add_processing_overlay()
 
+def add_processing_overlay():
+    if st.session_state["processing"]:
+        with processing_overlay.container():
+            st.markdown(
+                """
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                            background: rgba(0, 0, 0, 0.6); display: flex;
+                            justify-content: center; align-items: center;
+                            color: white; font-size: 24px; font-weight: bold;
+                            z-index: 9999;">
+                    Processing... Please wait
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    else:
+        processing_overlay.empty()
+    
+# Processing overlay using st.empty()
+processing_overlay = st.empty()
 # Streamlit UI
 st.title("Welcome to Mood-Tunes 🎵")
-st.header("Pick a Vibe, Get a Playlist!")
 
+
+st.subheader("Pick a Vibe, Get a Playlist!")
+
+selected_language = st.selectbox(
+    "Please select language for your playlist?",
+    ("English", "Deutsch", "Hindi", "French", "Arabic", "Spanish", "Russian", "Punjabi", "Telgu", "Tamil" ),
+    placeholder = "Select laungaue  of your playlist...",
+)
 
 # Create a 3x3 grid for images with checkboxes
 cols = st.columns(4)  # Create 3 columns
@@ -142,7 +188,7 @@ for idx, img_path in enumerate(image_paths):
     with cols[idx % 4]:  # Distribute images in columns
         img = Image.open(img_path)
         img = img.resize(IMG_SIZE)
-        st.image(img, use_container_width=False)
+        st.image(img)
         # Use checkbox with session state
         checkbox = st.checkbox("", key=f"checkbox_{img_path}",on_change=select_image, args=(img_path,))
 
@@ -154,22 +200,32 @@ if st.session_state["selected_image"]:
     # Resize image to fixed dimensions
     fixed_size = (200, 200)  # (width, height)
     resized_image = image.resize(fixed_size)
+ 
 
-    st.header("Please select language for your playlist?")
+    # Processing starts
+    st.session_state["processing"] = True
+    add_processing_overlay()
 
-    selected_language = st.selectbox(
-    "",
-    ("English", "Deutsch", "Hindi", "French", "Arabic", "Spanish", "Russian", "Punjabi", "Telgu", "Tamil" ),
-    placeholder = "Select laungaue  of your playlist...",
-    )
+    with st.spinner("Analyzing image and fetching playlists..."):
+        time.sleep(5)  # Simulating processing time
+        st.session_state["detected_emotion"] = predict_emotion_merged(image)  
+        st.session_state["processed"] = True
+
+    # Processing ends
+    st.session_state["processing"] = False
+    add_processing_overlay()
+
 
     # Predict emotion
-    detected_emotion = predict_emotion_merged(image)
+    # detected_emotion = predict_emotion_merged(image)
+# Display results after processing
+if "processed" in st.session_state and st.session_state["processed"]:
 
     st.header("You have selected")
     # Create two columns for side-by-side layout
     col_img, col_info = st.columns([1, 2])  # 1: Thumbnail, 2: Playlist info
 
+    detected_emotion = st.session_state["detected_emotion"]
     # Display in columns
     with col_img:
         st.image(resized_image, width=200)  # Show selected image
